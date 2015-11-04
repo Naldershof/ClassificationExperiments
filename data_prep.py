@@ -10,10 +10,10 @@ def read_available_subs(subfile):
 	en_subs.drop(['SubSumCD','MovieFPS','SeriesSeason','SeriesEpisode','SeriesIMDBParent','MovieKind'], axis=1, inplace=True)
 	return en_subs
 
-# Has this entire process been done by like 15 million other people who have their code on github? Yes, yes it has.
-# BUT I'M BUILDING CHARACTER DAMNIT
 def read_genres(genrefile):
 	# Genre File is really weirdly constructed so I'll have to write an actual parser, not just use the pandas' read_csv
+	# Has this entire process been done by like 15 million other people who have their code on github? Yes, yes it has.
+	# BUT I'M BUILDING CHARACTER DAMNIT
 	print 'Parsing genre list documentation block'
 	with open(genrefile) as genres:
 		for num, line in enumerate(genres):
