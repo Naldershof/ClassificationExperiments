@@ -5,6 +5,8 @@ Data from imdb:
 http://www.imdb.com/interfaces
 Acquired via ftp.
 
+For now using two main data sources, genres.list, and ratings.list. Some additional sources may make for interesting analysis as well though
+
 OpenSubtitles Database
 Link dump here:
 http://dl.opensubtitles.org/addons/export/
