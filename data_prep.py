@@ -31,8 +31,7 @@ def read_genres(genrefile):
 
 def read_ratings(ratingsfile, filter=True):
 	#Get all rated movies, and then return a dataframe with only those that have been rated at least 10k times
-	print 'Parsing ratings list documentation block'
-	
+	print 'Parsing ratings documentation block'
 	with open(ratingsfile) as ratings:		
 		for num, line in enumerate(ratings):
 			if line == 'MOVIE RATINGS REPORT\n':
@@ -48,6 +47,10 @@ def read_ratings(ratingsfile, filter=True):
 		
 	ratings_arr = []
 
+	print 'Parse ratings lines and convert to DataFrame'
+	if filter is True:
+		print 'Filter set to true, ignoring entries with <1000 entries'
+
 	for i, line in enumerate(ratings_unparsed):
 		entry = []
 		#MAGIC NUMBERS!!! Let's make this better with some regexes and stuff
@@ -57,7 +60,7 @@ def read_ratings(ratingsfile, filter=True):
 		#1000 still gives a lot of stuff no one actually cares about, it's the top <5%, but imdb is just seriously heavy 
 		#on unpopular things 
 		if filter is True:
-			if entry[0] > 1000:
+			if entry[0] >= 1000:
 				ratings_arr.append(entry)
 		else:
 			ratings_arr.append(entry)
@@ -68,9 +71,8 @@ def read_ratings(ratingsfile, filter=True):
 
 
 def merge_ratings_w_genres(ratings, genres):
-	
-	#MERGE SOME STUFF.
 	#Basically get all those which have the same names in ratings and genres
+	movies = pd.merge(ratings, genres, how='inner', on='title')
 
 	# Title strings end in ' (20XX)', however this isn't perfect
 	# Sometimes they actually end in something like ' (20XX) (V)' or ' (20XX) (TV)'
@@ -80,7 +82,7 @@ def merge_ratings_w_genres(ratings, genres):
 
 	pass
 
-def match_to_subs(genre_listing, sub_listing, rating_listing):
+def match_to_subs(movie_listing, sub_listing):
 	#Join genre listings to significantly rated movies
 	#Get links to download the subs and associate them, don't fetch them just yet though
 	pass
