@@ -11,7 +11,8 @@ def read_available_subs(subfile):
 	en_subs.drop(['SubSumCD','MovieFPS','SeriesSeason','SeriesEpisode','SeriesIMDBParent','MovieKind'], axis=1, inplace=True)
 	return en_subs
 
-def read_genres(genrefile):
+
+def read_genres(genrefile, compound=False):
 	# Genre File is really weirdly constructed so I'll have to write an actual parser, not just use the pandas' read_csv
 	print 'Parsing genre list documentation block'
 	
@@ -26,6 +27,12 @@ def read_genres(genrefile):
 
 	genre_list = pd.read_csv(genrefile, sep=r'\t*', skipinitialspace=True, skiprows=genre_start_line, 
 							engine='python', header=None, names=['title','genre'])
+
+	#If compound = True generate compund generes, eg combination of two values
+	#This kinda sucks in the easy way though in that it's super slow and for rare things where you have 3+ genres
+	#It totally sucks. Determine exactly how things work in the dataset. 
+	#My guess is that 2 genres things are cool, 3+ suck
+
 	return genre_list
 
 
@@ -69,7 +76,6 @@ def read_ratings(ratingsfile, filter=True):
 	return ratings
 
 
-
 def merge_ratings_w_genres(ratings, genres):
 	#Basically get all those which have the same names in ratings and genres
 	movies = pd.merge(ratings, genres, how='inner', on='title')
@@ -77,8 +83,13 @@ def merge_ratings_w_genres(ratings, genres):
 	# Title strings end in ' (20XX)', however this isn't perfect
 	# Sometimes they actually end in something like ' (20XX) (V)' or ' (20XX) (TV)'
 	# No earthly idea why, so write a better regex for this. 
-	#print 'Stripping date from variables'
-	#genre_list.title = genre_list.title.str[:-7]
+
+	#Determine how often this is really necessary on "popular" eg: passed the earlier rating parsing process, movies
+
+	# print 'Stripping date from variables'
+	# genre_list.title = genre_list.title.str[:-7]
+
+	# The main problem is that this duplicates genres, the problem is whether we do compound genres or just select the first 
 
 	pass
 
