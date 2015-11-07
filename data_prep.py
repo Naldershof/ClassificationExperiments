@@ -2,17 +2,23 @@
 
 import pandas as pd
 import numpy as np
+import re
+
 
 def read_available_subs(subfile):
 	# Using subtitles files from http://dl.opensubtitles.org/addons/export/
 	all_subs = pd.read_csv(subfile, sep='\t', error_bad_lines=False, warn_bad_lines=False)
+	
 	print 'Filtering to only English subtitles on movies'
 	en_subs = all_subs[(all_subs.MovieKind == 'movie') & (all_subs.ISO639 == 'en')].copy()
 	en_subs.drop(['SubSumCD','MovieFPS','SeriesSeason','SeriesEpisode','SeriesIMDBParent','MovieKind'], axis=1, inplace=True)
+	
+	en_subs['title_clean'] = en_subs.MovieName.apply(lambda x: re.sub('\W+', '', str(x)).upper())
+
 	return en_subs
 
 
-def read_genres(genrefile, compound=False):
+def read_genres(genrefile):
 	# Genre File is really weirdly constructed so I'll have to write an actual parser, not just use the pandas' read_csv
 	print 'Parsing genre list documentation block'
 	
@@ -28,16 +34,11 @@ def read_genres(genrefile, compound=False):
 	genre_list = pd.read_csv(genrefile, sep=r'\t*', skipinitialspace=True, skiprows=genre_start_line, 
 							engine='python', header=None, names=['title','genre'])
 
-	#If compound = True generate compund generes, eg combination of two values
-	#This kinda sucks in the easy way though in that it's super slow and for rare things where you have 3+ genres
-	#It totally sucks. Determine exactly how things work in the dataset. 
-	#My guess is that 2 genres things are cool, 3+ suck
-
 	return genre_list
 
 
 def read_ratings(ratingsfile, filter=True):
-	#Get all rated movies, and then return a dataframe with only those that have been rated at least 10k times
+	# Get all rated movies, and then return a dataframe with only those that have been rated at least 10k times
 	print 'Parsing ratings documentation block'
 	with open(ratingsfile) as ratings:		
 		for num, line in enumerate(ratings):
@@ -48,8 +49,8 @@ def read_ratings(ratingsfile, filter=True):
 				ratings_end_line = num - 2
 
 	with open(ratingsfile) as ratings:
-		#Convert those columns which actually have ratings data into nested arrays
-		#Then we can convert those nested arrays into a dataframe 
+		# Convert those columns which actually have ratings data into nested arrays
+		# Then we can convert those nested arrays into a dataframe 
 		ratings_unparsed = tuple(ratings)[ratings_start_line:ratings_end_line]
 		
 	ratings_arr = []
@@ -60,12 +61,12 @@ def read_ratings(ratingsfile, filter=True):
 
 	for i, line in enumerate(ratings_unparsed):
 		entry = []
-		#MAGIC NUMBERS!!! Let's make this better with some regexes and stuff
+		# MAGIC NUMBERS!!! Let's make this better with some regexes and stuff
 		entry.append( float(line[18:26].strip()) )
 		entry.append( float(line[27:31].strip()) )
 		entry.append( line[31:].strip() )
-		#1000 still gives a lot of stuff no one actually cares about, it's the top <5%, but imdb is just seriously heavy 
-		#on unpopular things 
+		# 1000 still gives a lot of stuff no one actually cares about, it's the top <5%, but imdb is just seriously heavy 
+		# on unpopular things 
 		if filter is True:
 			if entry[0] >= 1000:
 				ratings_arr.append(entry)
@@ -73,31 +74,32 @@ def read_ratings(ratingsfile, filter=True):
 			ratings_arr.append(entry)
 
 	ratings = pd.DataFrame(ratings_arr, columns=['votes','rating','title'])
+	print '%s movies returned' % ratings.shape[0]
 	return ratings
 
 
 def merge_ratings_w_genres(ratings, genres):
-	#Basically get all those which have the same names in ratings and genres
-	movies = pd.merge(ratings, genres, how='inner', on='title')
+	print 'Performing initial merge'
+	# Basically get all those which have the same names in ratings and genres
+	movie_data = pd.merge(ratings, genres, how='inner', on='title')
+	# The main problem is that this duplicates genres, the problem is whether we do compound genres, or just select the first 
+	movie_data = movie_data.groupby(['title','votes','rating']).apply(lambda x: set(x.genre))
+	movies = movie_data.reset_index()
 
-	# Title strings end in ' (20XX)', however this isn't perfect
-	# Sometimes they actually end in something like ' (20XX) (V)' or ' (20XX) (TV)'
-	# No earthly idea why, so write a better regex for this. 
-
-	#Determine how often this is really necessary on "popular" eg: passed the earlier rating parsing process, movies
-
-	# print 'Stripping date from variables'
-	# genre_list.title = genre_list.title.str[:-7]
-
-	# The main problem is that this duplicates genres, the problem is whether we do compound genres or just select the first 
-
-	pass
+	print 'Cleaning title'
+	# Since movies are usually 'title (year)', split title to get rid of year, regex matches '(NUM)'
+	# Note, this doesn't work for (500) days of summer, fix it by using 4 occurences instead of 1+
+	movies['title_clean'] = movies.title.apply(lambda x: re.split( '(\(\d+\))', x )[0])
+	movies['title_clean'] = movies.title_clean.apply(
+								lambda x: re.sub('\W+', '', x).upper()) #only alpha numeric to upper
+	return movies
 
 def match_to_subs(movie_listing, sub_listing):
-	#Join genre listings to significantly rated movies
-	#Get links to download the subs and associate them, don't fetch them just yet though
+	# Join genre listings to significantly rated movies
+	# Get links to download the subs and associate them, don't fetch them just yet though
 	pass
 
 if __name__ == '__main__':
 	sub_listing = read_available_subs('subtitles_all.txt') 
 	genre_listing = read_genres('imdb/genres.list')
+	rating_listing = read_ratings('imdb/ratings.list')
