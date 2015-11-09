@@ -7,12 +7,14 @@ import re
 
 def read_available_subs(subfile):
 	# Using subtitles files from http://dl.opensubtitles.org/addons/export/
+	print 'Parsing subtitle listings'
 	all_subs = pd.read_csv(subfile, sep='\t', error_bad_lines=False, warn_bad_lines=False)
 	
 	print 'Filtering to only English subtitles on movies'
 	en_subs = all_subs[(all_subs.MovieKind == 'movie') & (all_subs.ISO639 == 'en')].copy()
 	en_subs.drop(['SubSumCD','MovieFPS','SeriesSeason','SeriesEpisode','SeriesIMDBParent','MovieKind'], axis=1, inplace=True)
 	
+	# Alphanumberic to upper
 	en_subs['title_clean'] = en_subs.MovieName.apply(lambda x: re.sub('\W+', '', str(x)).upper())
 
 	return en_subs
@@ -21,7 +23,6 @@ def read_available_subs(subfile):
 def read_genres(genrefile):
 	# Genre File is really weirdly constructed so I'll have to write an actual parser, not just use the pandas' read_csv
 	print 'Parsing genre list documentation block'
-	
 	with open(genrefile) as genres:
 		for num, line in enumerate(genres):
 			if line == '8: THE GENRES LIST\n':
@@ -30,7 +31,6 @@ def read_genres(genrefile):
 				break
 
 	print 'Reading genre list into memory'
-
 	genre_list = pd.read_csv(genrefile, sep=r'\t*', skipinitialspace=True, skiprows=genre_start_line, 
 							engine='python', header=None, names=['title','genre'])
 
@@ -85,11 +85,12 @@ def merge_ratings_w_genres(ratings, genres):
 	# The main problem is that this duplicates genres, the problem is whether we do compound genres, or just select the first 
 	movie_data = movie_data.groupby(['title','votes','rating']).apply(lambda x: set(x.genre))
 	movies = movie_data.reset_index()
+	movies.rename(columns={0:'genres'}, inplace=True)
 
 	print 'Cleaning title'
-	# Since movies are usually 'title (year)', split title to get rid of year, regex matches '(NUM)'
-	# Note, this doesn't work for (500) days of summer, fix it by using 4 occurences instead of 1+
-	movies['title_clean'] = movies.title.apply(lambda x: re.split( '(\(\d+\))', x )[0])
+	# Since movies are usually 'title (year)', split title to get rid of year, regex matches '(####)'
+	# Note, this wouldn't work if there was a movie called "(1234) Blah", but it seems there's not
+	movies['title_clean'] = movies.title.apply(lambda x: re.split( '(\(\d{4}\))', x )[0])
 	movies['title_clean'] = movies.title_clean.apply(
 								lambda x: re.sub('\W+', '', x).upper()) #only alpha numeric to upper
 	return movies
@@ -97,6 +98,10 @@ def merge_ratings_w_genres(ratings, genres):
 def match_to_subs(movie_listing, sub_listing):
 	# Join genre listings to significantly rated movies
 	# Get links to download the subs and associate them, don't fetch them just yet though
+	movies_subs = pd.merge(movie_listing, sub_listing, how='inner', on='title_clean')
+	movies_srts = movies_subs[movies_subs.SubFormat == 'srt'].copy()
+	# Problems here since you can't do more than 200 requests per day, site indicates openness to bulk requests
+	# Will be doing that 
 	pass
 
 if __name__ == '__main__':
