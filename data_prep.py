@@ -77,6 +77,18 @@ def read_ratings(ratingsfile, filter=True):
 	print '%s movies returned' % ratings.shape[0]
 	return ratings
 
+def read_mpaa(mpaafile):
+	print 'Opening files'
+	with open(mpaafile) as mpaa_r:
+		mpaa = tuple(mpaa_r)
+	
+	# Nah this is gross, think about this tomorrow when I'm more awake
+	raw_lines = []
+	for line in mpaa:
+		if line[0:3] == 'MV:':
+			arr.append(line)
+		elif line[0:3] == 'RE:':
+			arr.append(line)
 
 def merge_ratings_w_genres(ratings, genres):
 	print 'Performing initial merge'
@@ -105,6 +117,8 @@ def match_to_subs(movie_listing, sub_listing):
 	pass
 
 if __name__ == '__main__':
-	sub_listing = read_available_subs('subtitles_all.txt') 
+	# Taking a step back here, start with a smaller volume of text, use MPAA ratings reasons instead
+	# Ratings information should have words that correlate directly to Genre as well
+	# sub_listing = read_available_subs('subtitles_all.txt') 
 	genre_listing = read_genres('imdb/genres.list')
 	rating_listing = read_ratings('imdb/ratings.list')
