@@ -103,6 +103,10 @@ def read_mpaa(mpaafile):
 		mpaa_arr.append([clean_key] + value_split[1:])
 	
 	mpaa_frame = pd.DataFrame(mpaa_arr, columns=['title','label','reason'])
+
+	mpaa_frame['title_clean'] = mpaa_frame.title.apply(lambda x: re.split( '(\(\d{4}\))', x )[0])
+	mpaa_frame['title_clean'] = mpaa_frame.title_clean.apply(
+								lambda x: re.sub('\W+', '', x).upper())
 	return mpaa_frame
 
 def merge_ratings_w_genres(ratings, genres):
@@ -137,3 +141,4 @@ if __name__ == '__main__':
 	# sub_listing = read_available_subs('subtitles_all.txt') 
 	genre_listing = read_genres('imdb/genres.list')
 	rating_listing = read_ratings('imdb/ratings.list')
+	ratings_genre = merge_ratings_w_genres(rating_listing, genre_listing)
