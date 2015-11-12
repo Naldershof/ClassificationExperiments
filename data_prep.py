@@ -78,17 +78,32 @@ def read_ratings(ratingsfile, filter=True):
 	return ratings
 
 def read_mpaa(mpaafile):
-	print 'Opening files'
+	print 'Opening mpaa files'
 	with open(mpaafile) as mpaa_r:
 		mpaa = tuple(mpaa_r)
 	
-	# Nah this is gross, think about this tomorrow when I'm more awake
-	raw_lines = []
-	for line in mpaa:
-		if line[0:3] == 'MV:':
-			arr.append(line)
-		elif line[0:3] == 'RE:':
-			arr.append(line)
+	print 'Cleaning mpaa data'
+	mpaa_dict = {}
+	for line, item in enumerate(mpaa):
+		if item[0:3] == 'MV:':
+			movie = item[3:]
+			mpaa_dict[movie] = []
+		if item[0:3] == 'RE:':
+			mpaa_dict[movie].append(item[3:])
+
+	mpaa_arr = []
+	for key, value in mpaa_dict.iteritems():
+		clean_key = key.strip()
+		# Join two line ratings into one and replace multiple spaces with one 
+		temp_value = ' '.join(value).strip().replace('\n','')
+		clean_value = re.sub(' +', ' ' ,temp_value)
+		
+		# Get rating and reason by splitting on possible ratings 
+		value_split = re.split('( G | PG | PG-13 | R | NC-17 )',clean_value)
+		mpaa_arr.append([clean_key] + value_split[1:])
+	
+	mpaa_frame = pd.DataFrame(mpaa_arr, columns=['title','label','reason'])
+	return mpaa_frame
 
 def merge_ratings_w_genres(ratings, genres):
 	print 'Performing initial merge'
