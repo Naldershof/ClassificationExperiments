@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import pandas as pd
-import numpy as np
 import re
-
 
 def read_available_subs(subfile):
 	# Using subtitles files from http://dl.opensubtitles.org/addons/export/
+	# Not using this right now.
 	print 'Parsing subtitle listings'
 	all_subs = pd.read_csv(subfile, sep='\t', error_bad_lines=False, warn_bad_lines=False)
 	
@@ -77,6 +76,7 @@ def read_ratings(ratingsfile, filter=True):
 	print '%s movies returned' % ratings.shape[0]
 	return ratings
 
+
 def read_mpaa(mpaafile):
 	print 'Opening mpaa files'
 	with open(mpaafile) as mpaa_r:
@@ -103,13 +103,10 @@ def read_mpaa(mpaafile):
 		mpaa_arr.append([clean_key] + value_split[1:])
 	
 	mpaa_frame = pd.DataFrame(mpaa_arr, columns=['title','label','reason'])
-
-	mpaa_frame['title_clean'] = mpaa_frame.title.apply(lambda x: re.split( '(\(\d{4}\))', x )[0])
-	mpaa_frame['title_clean'] = mpaa_frame.title_clean.apply(
-								lambda x: re.sub('\W+', '', x).upper())
 	return mpaa_frame
 
-def merge_ratings_w_genres(ratings, genres):
+
+def merge_all(ratings, genres, mpaa):
 	print 'Performing initial merge'
 	# Basically get all those which have the same names in ratings and genres
 	movie_data = pd.merge(ratings, genres, how='inner', on='title')
@@ -118,13 +115,16 @@ def merge_ratings_w_genres(ratings, genres):
 	movies = movie_data.reset_index()
 	movies.rename(columns={0:'genres'}, inplace=True)
 
+	movies_full = movies.merge(mpaa, how='inner', on = 'title')
+
 	print 'Cleaning title'
 	# Since movies are usually 'title (year)', split title to get rid of year, regex matches '(####)'
 	# Note, this wouldn't work if there was a movie called "(1234) Blah", but it seems there's not
 	movies['title_clean'] = movies.title.apply(lambda x: re.split( '(\(\d{4}\))', x )[0])
 	movies['title_clean'] = movies.title_clean.apply(
 								lambda x: re.sub('\W+', '', x).upper()) #only alpha numeric to upper
-	return movies
+	return movies_full
+
 
 def match_to_subs(movie_listing, sub_listing):
 	# Join genre listings to significantly rated movies
@@ -134,11 +134,3 @@ def match_to_subs(movie_listing, sub_listing):
 	# Problems here since you can't do more than 200 requests per day, site indicates openness to bulk requests
 	# Will be doing that 
 	pass
-
-if __name__ == '__main__':
-	# Taking a step back here, start with a smaller volume of text, use MPAA ratings reasons instead
-	# Ratings information should have words that correlate directly to Genre as well
-	# sub_listing = read_available_subs('subtitles_all.txt') 
-	genre_listing = read_genres('imdb/genres.list')
-	rating_listing = read_ratings('imdb/ratings.list')
-	ratings_genre = merge_ratings_w_genres(rating_listing, genre_listing)
