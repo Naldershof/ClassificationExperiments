@@ -103,6 +103,10 @@ def read_mpaa(mpaafile):
 		mpaa_arr.append([clean_key] + value_split[1:])
 	
 	mpaa_frame = pd.DataFrame(mpaa_arr, columns=['title','label','reason'])
+
+	mpaa_frame['reason_clean'] = mpaa_frame.reason.astype(str).apply(
+		lambda x: re.sub('[^a-zA-Z]', ' ', x))
+
 	return mpaa_frame
 
 
