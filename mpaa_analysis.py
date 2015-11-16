@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 
+'''So this works ok. I guess the problem is I'm lacking significant
+Indicators of how well it's  actually performing. A lot of that is
+limited insights into how this actually works and an improper metric
+for comparison. So start writing methods for evaluating the success
+of the model in question, as well as using additional models and testing
+really naive things like trying all on specific rating.'''
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 import data_prep
+
+#-----------------------------
+#Prep data for use in Different models
+#-----------------------------
 
 
 def split_data(movies):
@@ -25,6 +36,10 @@ def create_test_features(test, vectorizer):
     test_data_features = vectorizer.transform(
         test.reason_clean.tolist())
     return test_data_features
+
+#-----------------------------
+#Random Forest testing.
+#-----------------------------
 
 
 def fit_forest(train, features):
@@ -50,3 +65,7 @@ if __name__ == '__main__':
     result = forest.predict(test_data_features)
     test['predictions'] = result
     #Seems about 85% accurate so far, cool.
+
+    vocab_significance = pd.DataFrame(
+        zip(vectorizer.vocabulary_, forest.feature_importances_),
+        columns=['vocab', 'significance'])
