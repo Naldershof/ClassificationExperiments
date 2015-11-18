@@ -48,6 +48,18 @@ def fit_forest(train, features):
     return forest
 
 
+#-----------------------------
+#Evaluation
+#-----------------------------
+
+def compare_rates(tested):
+    rates = pd.concat([tested.label.value_counts(),
+                       tested.predictions.value_counts()],
+                      axis=1)
+    #Here's where we put the scoring logic (I think)
+    return rates
+
+
 if __name__ == '__main__':
     genre_listing = data_prep.read_genres('imdb/genres.list')
     rating_listing = data_prep.read_ratings('imdb/ratings.list')
