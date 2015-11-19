@@ -17,7 +17,6 @@ def read_available_subs(subfile):
 
     # Alphanumberic to upper
     en_subs['title_clean'] = en_subs.MovieName.apply(lambda x: re.sub('\W+', '', str(x)).upper())
-
     return en_subs
 
 
