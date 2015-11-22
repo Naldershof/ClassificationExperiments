@@ -8,7 +8,7 @@ of the model in question, as well as using additional models and testing
 really naive things like trying all on specific rating.'''
 
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.tree import DecisionTreeClassifier
 import pandas as pd
 import numpy as np
@@ -39,7 +39,7 @@ def create_test_features(test, vectorizer):
     return test_data_features
 
 #-----------------------------
-# Classifier testing.
+# Classifier Fitting.
 #-----------------------------
 
 # This doesn't work terribly with genres either, we just need to convert from
@@ -59,16 +59,49 @@ def fit_random_forest(train, features, predictor):
     return forest
 
 
+def fit_xrandom_forest(train, features, predictor):
+    xforest = ExtraTreesClassifier(n_estimators=100)
+    xforest = xforest.fit(features, train[predictor])
+    return xforest
+
+
 def fit_dectree(train, features, predictor):
     trees = DecisionTreeClassifier(max_depth=None, min_samples_split=1,
                                    random_state=0)
     trees = trees.fit(features, train[predictor])
     return trees
 
+# Throw in an SVM here since that supports multiclass classification
+
+#-----------------------------
+# Classifier Predicting.
+#-----------------------------
+
+
+def pred_random_forest(test, test_data_features, forest):
+    result = forest.predict(test_data_features)
+    test['predictions'] = result
+    return test
+
+
+def pred_xrandom_forest(test, test_data_features, xforest):
+    result = xforest.predict(test_data_features)
+    test['predictions'] = result
+    return test
+
+
+def pred_dectree(test, test_data_features, trees):
+    result = trees.predict(test_data_features)
+    test['predictions'] = result
+    return test
+
 
 #-----------------------------
 #Evaluation
 #-----------------------------
+
+#I don't understand how things like confusion matrices work in multiple choice problems :-\
+
 
 def compare_rates(tested, predictor='label'):
     rates = pd.concat([tested[predictor].value_counts(),
@@ -90,12 +123,6 @@ if __name__ == '__main__':
     train, test = split_data(movies)
     vectorizer, train_data_features = create_train_features(train)
     test_data_features = create_test_features(test, vectorizer)
-
-    forest = fit_random_forest(train, train_data_features, 'label')
-
-    result = forest.predict(test_data_features)
-    test['predictions'] = result
-    #Seems about 85% accurate so far, cool.
 
     vocab_significance = pd.DataFrame(
         zip(vectorizer.vocabulary_, forest.feature_importances_),
