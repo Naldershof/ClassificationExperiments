@@ -74,7 +74,12 @@ def fit_dectree(train, features, predictor):
 # Throw in an SVM here since that supports multiclass classification
 
 #-----------------------------
-# Classifier Predicting.
+# Sklearn Classifier Predicting.
+#
+# Note: All the trials I've run using these classiefiers predict identical results
+# This is pretty good, it means we're really identifying the factors that are important
+# and we know that MPAA ratings relatively frequently don't match the true criteria
+# they provide, so we're predicting very well.
 #-----------------------------
 
 
@@ -95,6 +100,13 @@ def pred_dectree(test, test_data_features, trees):
     test['predictions'] = result
     return test
 
+#-----------------------------
+#Custom Classifiers
+#-----------------------------
+
+
+def fit_custom_dectree(train, features, predictor):
+    pass
 
 #-----------------------------
 #Evaluation
