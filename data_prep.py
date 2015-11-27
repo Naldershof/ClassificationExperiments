@@ -100,12 +100,14 @@ def read_mpaa(mpaafile):
         clean_value = re.sub(' +', ' ', temp_value)
 
         # Get rating and reason by splitting on possible ratings
-        value_split = re.split('( G | PG | PG-13 | R | NC-17 )', clean_value)
+        value_split = re.split('( G | PG |\s*PG\s*-\s*13 | R |NC\s*-\s*17)', clean_value)
         mpaa_arr.append([clean_key] + value_split[1:])
 
     mpaa_frame = pd.DataFrame(mpaa_arr, columns=['title', 'label', 'reason'])
     # The regex brings them in with spaces, I should do this before here but it works
-    mpaa_frame.label = mpaa_frame.label.str.strip()
+    #mpaa_frame.label = mpaa_frame.label.str.strip()
+    mpaa_frame.label = mpaa_frame.label.astype(str).apply(
+        lambda x: re.sub('[\s]', '', x))
 
     mpaa_frame['reason_clean'] = mpaa_frame.reason.astype(str).apply(
         lambda x: re.sub('[^a-zA-Z]', ' ', x))
