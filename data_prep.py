@@ -100,6 +100,7 @@ def read_mpaa(mpaafile):
         clean_value = re.sub(' +', ' ', temp_value)
 
         # Get rating and reason by splitting on possible ratings
+        # Some come in as "PG -13" or "PG - 13", stupid messy data
         value_split = re.split('( G | PG |\s*PG\s*-\s*13 | R |NC\s*-\s*17)', clean_value)
         mpaa_arr.append([clean_key] + value_split[1:])
 

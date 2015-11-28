@@ -26,6 +26,9 @@ def split_data(movies):
     return train, test
 
 
+#Additional steps we could take: Implementing a "stemmer", which strips
+#similar words down to a root word. EG "nude" and "nudity"
+
 def create_train_features(train):
     vectorizer = CountVectorizer(analyzer="word", stop_words='english')
     train_data_features = vectorizer.fit_transform(
@@ -66,7 +69,7 @@ def fit_xrandom_forest(train, features, predictor):
 
 
 def fit_dectree(train, features, predictor):
-    trees = DecisionTreeClassifier(max_depth=None, min_samples_split=1,
+    trees = DecisionTreeClassifier(max_depth=8, min_samples_split=1,
                                    random_state=0)
     trees = trees.fit(features, train[predictor])
     return trees
@@ -136,6 +139,6 @@ if __name__ == '__main__':
     vectorizer, train_data_features = create_train_features(train)
     test_data_features = create_test_features(test, vectorizer)
 
-    vocab_significance = pd.DataFrame(
-        zip(vectorizer.vocabulary_, forest.feature_importances_),
-        columns=['vocab', 'significance'])
+    '''vocab_significance = pd.DataFrame(
+                    zip(vectorizer.vocabulary_, forest.feature_importances_),
+                    columns=['vocab', 'significance'])'''
