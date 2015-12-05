@@ -79,29 +79,34 @@ def fit_dectree(train, features, predictor):
 #-----------------------------
 # Sklearn Classifier Predicting.
 #
-# Note: All the trials I've run using these classiefiers predict identical results
-# This is pretty good, it means we're really identifying the factors that are important
-# and we know that MPAA ratings relatively frequently don't match the true criteria
-# they provide, so we're predicting very well.
+# Note: Now the actually return different results! The problem
+# was that I was overwritting predictions in place without realizing it
+# cause creating pandas columns modifies the original object unless you explicity
+# make sure to copy...
 #-----------------------------
 
 
 def pred_random_forest(test, test_data_features, forest):
+    # Otherwise we modify the original, insidious mistake that made
+    # results appear the same across algorithms
+    test_rf = test.copy()
     result = forest.predict(test_data_features)
-    test['predictions'] = result
-    return test
+    test_rf['predictions'] = result
+    return test_rf
 
 
 def pred_xrandom_forest(test, test_data_features, xforest):
+    test_xrf = test.copy()
     result = xforest.predict(test_data_features)
-    test['predictions'] = result
-    return test
+    test_xrf['predictions'] = result
+    return test_xrf
 
 
 def pred_dectree(test, test_data_features, trees):
+    test_dec = test.copy()
     result = trees.predict(test_data_features)
-    test['predictions'] = result
-    return test
+    test_dec['predictions'] = result
+    return test_dec
 
 #-----------------------------
 #Custom Classifiers
