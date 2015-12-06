@@ -56,6 +56,11 @@ def entropies_by_partition(dataset, label):
     return entropies
 
 
+def min_entropy_feature(feature_df, label):
+    entropies = entropies_by_partition(feature_df, label)
+    return min(entropies, key=entropies.get)
+
+
 def fit_trees(train, label):
     pass
 
