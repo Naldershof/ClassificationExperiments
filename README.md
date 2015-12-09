@@ -1,5 +1,12 @@
 
-# movieClassification
+# Classification Experiments
+
+A repository for storing implementation of some various machine learning algorithms I'm experimenting with for classification and analysis.
+
+Each folder contains different datasets and general approaches
+
+## Move Classification
+
 Experimenting in classifying movies by genre using imdb data and python
 
 Data from imdb:
@@ -13,4 +20,9 @@ Current approach uses Random Forest classifier to match mpaa rating reasons up a
 Fix this by using something like multiclass log loss
 https://www.kaggle.com/wiki/MultiClassLogLoss
 
-General goal: Experimenting in the use of classification algorithms, both implemented using sklearn and coded from scratch for experience.
+## Titanic Survivor Predictions
+
+Using data from one of Kaggle's traditional training examples located here:
+https://www.kaggle.com/c/titanic
+
+While this is a relatively easy problem to solve by just doing a quick SKlearn classifier, I'll be implementing decision trees from scratch in python in order to better understand the workings of the algorithms and develop a greater understanding of the techniques and methods necessary to classify data based on different features
