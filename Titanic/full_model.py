@@ -35,6 +35,8 @@ def clean_data(DF):
 
     #This seems to give some decent segmentation, but idk how reasonable it is
     clean['log_price'] = np.floor(clean.Fare.apply(lambda x: 0 if x == 0 else np.log(x)))
+    clean['decade'] = np.floor(clean.Age / 10)
+
     return clean
 
 
@@ -45,7 +47,7 @@ def clean_data(DF):
 
 def prep_feature_df(train):
     #Add Cabin back in after doing some cleaning
-    feature_df = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare'], axis=1)
+    feature_df = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare', 'Age'], axis=1)
     return feature_df
 
 
