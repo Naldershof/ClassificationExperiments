@@ -30,8 +30,12 @@ def import_data(filename):
 
 
 def clean_data(DF):
-    DF['male'] = DF.Sex.map({"female": 0, "male": 1})
-    pass
+    clean = DF.copy()
+    clean['male'] = clean.Sex.map({"female": 0, "male": 1})
+
+    #This seems to give some decent segmentation, but idk how reasonable it is
+    clean['log_price'] = np.floor(clean.Fare.apply(lambda x: 0 if x == 0 else np.log(x)))
+    return clean
 
 
 # -------------------------
@@ -39,12 +43,9 @@ def clean_data(DF):
 # -------------------------
 
 
-def prep_feature_df(train, train_data_features):
-    feature_df = pd.DataFrame(train_data_features.todense())
-    feature_columns = feature_df.columns.tolist()
-
-    train_df = pd.concat([feature_df, train], axis=1)
-    feature_df = train_df[feature_columns + ["label"]]
+def prep_feature_df(train):
+    #Add Cabin back in after doing some cleaning
+    feature_df = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare'], axis=1)
     return feature_df
 
 
@@ -68,8 +69,8 @@ def entropy(feature_set, label):
     return sum(-p * np.log2(p) for p in prob)
 
 
-def partition_entropy(dataset, partition):
-    return sum(entropy(dataset[dataset[partition] == x], 'Survived')
+def partition_entropy(dataset, partition, label):
+    return sum(entropy(dataset[dataset[partition] == x], label)
                for x in dataset[partition].unique())
 
 
