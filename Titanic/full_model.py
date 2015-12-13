@@ -35,8 +35,10 @@ def clean_data(DF):
 
     #This seems to give some decent segmentation, but idk how reasonable it is
     clean['log_price'] = np.floor(clean.Fare.apply(lambda x: 0 if x == 0 else np.log(x)))
-    clean['decade'] = np.floor(clean.Age / 10)
 
+    clean['Age'] = clean.Age.fillna(clean.Age.median())
+    clean['Embarked'] = clean.Embarked.fillna(clean.Embarked.mode().iloc[0])
+    clean['decade'] = np.floor(clean.Age / 10)
     return clean
 
 
@@ -47,7 +49,8 @@ def clean_data(DF):
 
 def prep_feature_df(train):
     #Add Cabin back in after doing some cleaning
-    feature_df = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare', 'Age'], axis=1)
+    feature_df = train.drop(['PassengerId', 'Name', 'Ticket', 'Cabin', 'Fare', 'Age', 'Sex'], axis=1)
+    feature_df.Embarked = feature_df.Embarked.map({'S': 0, 'C': 1, 'Q': 2})
     return feature_df
 
 
@@ -93,3 +96,23 @@ def entropies_by_partition(dataset, label):
 def min_entropy_feature(feature_df, label):
     entropies = entropies_by_partition(feature_df, label)
     return min(entropies, key=entropies.get)
+
+
+# We have the math! Let's do the iteration parts now!
+
+# So the most effective way is going to be:
+#       - Write a split function where given a feature splits by that feature
+#       splits by a then returns an array of dataframes split by each possibility
+#       - Then run the min entropy on that split and move onto the next.
+#       - Hard part is going to be book keeping in a way that opens itself up for use as a
+#       predictor, not just a used for fitting
+
+'''def split_df(DF, feature):
+    df_split = {}
+    for x in DF[feature].unique():
+        df_split[x] = DF[DF[feature] == x].drop(feature, axis=1).copy()
+    return df_split'''
+
+
+def fit_dec_tree(DF, label, depth):
+    pass
