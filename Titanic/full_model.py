@@ -34,7 +34,7 @@ def clean_data(DF):
     clean['male'] = clean.Sex.map({"female": 0, "male": 1})
 
     #This seems to give some decent segmentation, but idk how reasonable it is
-    clean['log_price'] = np.floor(clean.Fare.apply(lambda x: 0 if x == 0 else np.log(x)))
+    clean['log_price'] = np.floor(clean.Fare.apply(lambda x: 0 if x == 0 else np.log(x))).fillna(0)
 
     clean['Age'] = clean.Age.fillna(clean.Age.median())
     clean['Embarked'] = clean.Embarked.fillna(clean.Embarked.mode().iloc[0])
@@ -107,12 +107,42 @@ def min_entropy_feature(feature_df, label):
 #       - Hard part is going to be book keeping in a way that opens itself up for use as a
 #       predictor, not just a used for fitting
 
-'''def split_df(DF, feature):
+# Note: This isn't a super effective method for actually getting result sets, a regression
+# would be much better, but this is for experimenting with writing my own, not for actually doing
+# high quality analytics
+
+def split_df(DF, feature):
     df_split = {}
     for x in DF[feature].unique():
         df_split[x] = DF[DF[feature] == x].drop(feature, axis=1).copy()
-    return df_split'''
+    return df_split
+
+# So what I really need to do is write a simple tree structure class since otherwise we won't be
+# able to effectively store the data, nested dicts / lists is technically possible, but gets very
+# very messy and no fun.
+
+#http://www.patricklamle.com/Tutorials/Decision%20tree%20python/tuto_decision%20tree.html
 
 
-def fit_dec_tree(DF, label, depth):
-    pass
+class tree_node:
+    def __init__(self, col=-1, value=None, results=None,
+                 t_branch=None, f_branch=None, depth=0):
+        self.col = col
+        self.value = value
+        self.results = results
+        self.t_branch = t_branch
+        self.f_branch = f_branch
+        self.depth = depth
+
+#Liberally cribbed code, max it work for our functions and adjusted split_df 
+'''def fit_dec_tree(DF, label, max_depth):
+    split_val = min_entropy_feature(DF, label)
+      # Create the sub branches   
+    if best_gain>0:
+        trueBranch=buildtree(best_sets[0])
+        falseBranch=buildtree(best_sets[1])
+        return decisionnode(col=best_criteria[0],value=best_criteria[1],
+                            tb=trueBranch,fb=falseBranch)
+    else:
+        return decisionnode(results=uniquecounts(rows))
+'''
